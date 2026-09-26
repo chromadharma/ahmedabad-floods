@@ -20,7 +20,7 @@ The first half is the project. The second half is what the model is for.
 
 On 23 July 2026, AMC's gauges recorded 11.20 inches (284 mm) at Bakrol,
 9.65 in at Bopal, and 9.49 in at Sarkhej Urban Health Centre in about twelve hours.
-The South West Zone averaged 196 mm, the North West 141 mm and the West 110 mm
+By 4 pm, the South West Zone averaged 196 mm, the North West 141 mm and the West 110 mm
 ([DeshGujarat, 23 Jul 2026](https://deshgujarat.com/2026/07/23/ahmedabad-city-records-over-11-inches-of-rain-in-12-hours-area-wise-rainfall-data-here/),
 [ward-wise table](https://deshgujarat.com/2026/07/23/where-did-it-rain-in-ahmedabad-city-ward-wise-rainfall-data-here/)).
 Water stood about three feet deep in Bopal and Ghuma for nearly three days. By
@@ -133,7 +133,7 @@ track repeats every 12 days, now flown by S1A or S1D.
 
 | Event | What is documented (source) | S1 scenes over the city | Verdict |
 |---|---|---|---|
-| **E1: 23–25 Jul 2026, pluvial** | 284 mm Bakrol, 245 mm Bopal in ~12 h; 3 ft standing in Bopal–Ghuma ~3 days; 126 societies waterlogged; Vasna at 134–135 ft (DeshGujarat; Counterview) | B: 1 Jul, 13 Jul (pre) · **B: 25 Jul 01:09 UTC, during** · B: 6 Aug (post). (A: 20 Jul, 1 Aug, 13 Aug for context only) | **The validation event (D7).** West only; ~2 days after peak rain |
+| **E1: 23–25 Jul 2026, pluvial** | 284 mm Bakrol, 245 mm Bopal in ~12 h; 3 ft standing in Bopal–Ghuma ~3 days; 126 societies waterlogged; Vasna at 134–135 ft (DeshGujarat; Counterview) | B: 1 Jul, 13 Jul (pre) · **B: 25 Jul 01:09 UTC, during** · B: 6 Aug (post). (A: 20 Jul, 1 Aug, 13 Aug for context only) | **The validation event (D7).** West only; ~2 days after peak rain, *but it was still raining at the pass (27 Sep check, below)* |
 | E2: ~7 Sep 2025, fluvial + pluvial | >1 lakh cusecs in the Sabarmati, lower promenade under water, ~300 waterlogging complaints, most from the East Zone (DeshGujarat, 7 Sep 2025) | A: 4 Sep · B: 9 Sep (strip excludes the river) · A: 16 Sep | River extent likely **not observed near peak**; confirm peak date |
 | E3: ~24–26 Aug 2025, fluvial | ~51,000 cusecs through 25 gates; Dholka, Vatva, Vejalpur, Bhat, Daskroi flooded (ETV Bharat) | A: 23 Aug · B: 28 Aug | Weak; mostly downstream of the city |
 | E4: late Jul 2017, fluvial | Vasna peak 1.85 lakh cusecs, Dharoi release 1.3 lakh; 18 rain deaths in Ahmedabad (Wikipedia, via search) | A: 24 Jul · B: 29 Jul (x ≤ 72.552) · A: 5 Aug | Best riverine candidate **only if** 24 Jul is near peak; peak date unverified |
@@ -147,6 +147,21 @@ track-B scenes (1 Jul, 13 Jul, 25 Jul, 6 Aug 2026; S1D, ≈01:09 UTC) were
 confirmed in the AWS archive. Whether it rained on 12–13 July is to be checked;
 if it did, 1 July alone is the reference. E2–E4 stay in the table as the record
 of what was checked; they are not used.
+
+*Checked 27 Sep 2026 (ERA5 hourly, `scripts/rain_check.py`, `data/README.md`):*
+no rain before 13 July (last hour ≥ 1 mm was 118 h before the pass), so **both
+1 and 13 July stay as references**. But **it rained through 24 July and was
+still raining at the 25 July pass**: 82 mm in the preceding 24 h at the wettest
+ERA5 cell, about 3 mm/h in the last hour. AMC's gauges agree on the day: city
+average 62.8 mm in the 24 h to 06:00 on (most likely) 25 July, heaviest in the
+Central and East zones. So the image is not "two days after the rain". It
+shows standing water from 23 July plus fresh water from 24–25 July, taken in
+light rain. Three consequences, for you to rule on before §5.3 is built:
+(a) M3 must be forced through 25 Jul 01:09 UTC, not just 23 July, and the gauge
+record has a 12-hour hole on the night of 23 July; (b) rain on open water
+roughens it and can raise C-band backscatter, so SAR may *under*-detect water
+in this image, which the write-up must say; (c) M1 and M2 over-predict for
+timing less than §5.3 assumed, because the image is closer to peak depth.
 
 Two honest consequences follow.
 
@@ -246,7 +261,8 @@ tags these underpasses is unverified.
   and dense built-up cells where neither signal is reliable are **excluded from
   scoring**. The remainder is mapped and its share reported. A flood the
   satellite cannot see is not counted as a model miss.
-- **Timing.** The E1 image is from about 36–48 h after peak rain. M3 is scored
+- **Timing.** The E1 image is from about 36–48 h after the 23 July peak, *but
+  during the second day's rain (§4, 27 Sep check)*. M3 is scored
   at the matching model hour; M1 and M2 give maximum extents only and will
   over-predict for that reason. The README says so beside the numbers.
 - **Processing without SNAP.** Calibration and terrain correction use
@@ -405,7 +421,8 @@ LISFLOOD-FP build script), `viz/`, `outputs/`, `tests/`, a `Makefile`
 1. **Satellites miss most urban flooding.** C-band SAR sees water in the open.
    Between buildings it sees shadow, layover and double bounce. The observable
    mask may exclude much of the dense core, and the README reports its share.
-2. **One pluvial event, one strip, one image ~2 days late.** Any accuracy
+2. **One pluvial event, one strip, one image ~2 days after the peak, taken in
+   light rain (§4).** Any accuracy
    claim is local to E1's western belt. The spatial calibration/test split
    limits over-fitting but doesn't create a second event.
 3. **No drainage network.** AMC's storm-water network isn't public, so drains

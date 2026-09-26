@@ -7,6 +7,7 @@ Every source, URL and licence is listed in data/README.md.
     python scripts/fetch.py press        # snapshots of the pages the rain and river figures come from
     python scripts/fetch.py s1           # Sentinel-1 track-B scenes, city window only (needs `make env`)
     python scripts/fetch.py s1 --plan    # list the scenes and estimate the bytes; download nothing
+    python scripts/fetch.py era5         # ERA5 hourly rain, 9 grid cells over the domain (Open-Meteo)
     python scripts/fetch.py all
 
 Every group except s1 is standard library only, so it runs before the
@@ -57,6 +58,8 @@ PRESS = {
         "https://deshgujarat.com/2026/07/23/ahmedabad-city-records-over-11-inches-of-rain-in-12-hours-area-wise-rainfall-data-here/",
     "deshgujarat_2026-07-23_ward-wise.html":
         "https://deshgujarat.com/2026/07/23/where-did-it-rain-in-ahmedabad-city-ward-wise-rainfall-data-here/",
+    "deshgujarat_2026-07-25_ward-wise-24h.html":
+        "https://deshgujarat.com/2026/07/25/ahmedabad-city-records-upto-3-7-inches-rain-in-24-hours-ward-wise-rainfall-data-here/",
     "deshgujarat_2026-07-25_societies-cleared.html":
         "https://deshgujarat.com/2026/07/25/rainwater-cleared-from-107-of-126-waterlogged-societies-in-ahmedabad-amc/",
     "counterview_2026-08_sabarmati-riverfront.html":
@@ -177,6 +180,38 @@ def fetch_press() -> None:
         except urllib.error.URLError as e:     # one dead page shouldn't stop the rest
             print(f"  FAIL press/{fname}: {e}")
     (RAW / "press" / "SOURCES.json").write_text(json.dumps(PRESS, indent=2))
+
+
+# ---------------------------------------------------------------------- ERA5
+
+# ERA5 hourly precipitation via Open-Meteo's archive API (no key). Only used to
+# say whether it rained before each S1 pass: at 0.25° it is far too coarse,
+# and too smooth, to force the models. The 3 x 3 native grid cells cover the domain.
+ERA5_LATS = (22.75, 23.00, 23.25)
+ERA5_LONS = (72.25, 72.50, 72.75)
+ERA5_PERIOD = ("2026-06-25", "2026-08-07")
+
+
+def fetch_era5() -> None:
+    import urllib.parse
+    dest = RAW / "era5" / f"era5_hourly_precip_{ERA5_PERIOD[0]}_{ERA5_PERIOD[1]}.json"
+    if dest.exists():
+        print(f"  have {dest.relative_to(RAW)}")
+        return
+    pts = [(la, lo) for la in ERA5_LATS for lo in ERA5_LONS]
+    q = urllib.parse.urlencode({
+        "latitude": ",".join(str(p[0]) for p in pts),
+        "longitude": ",".join(str(p[1]) for p in pts),
+        "start_date": ERA5_PERIOD[0], "end_date": ERA5_PERIOD[1],
+        "hourly": "precipitation", "timezone": "UTC", "models": "era5"})
+    with urllib.request.urlopen(urllib.request.Request(
+            "https://archive-api.open-meteo.com/v1/archive?" + q, headers=UA), timeout=120) as r:
+        data = json.load(r)
+    if any(v is None for d in data for v in d["hourly"]["precipitation"]):
+        raise RuntimeError("ERA5 series has gaps; the archive may not reach the end date yet")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(data))
+    print(f"  got  {dest.relative_to(RAW)} ({len(data)} cells)")
 
 
 # --------------------------------------------------------------- Sentinel-1
@@ -330,7 +365,7 @@ def fetch_s1(plan_only: bool = False) -> None:
 
 # ---------------------------------------------------------------------- main
 
-GROUPS = ("dem", "fabdem", "wards", "press", "s1")
+GROUPS = ("dem", "fabdem", "wards", "press", "era5", "s1")
 
 
 def main(which: str, plan_only: bool = False) -> None:
@@ -343,6 +378,8 @@ def main(which: str, plan_only: bool = False) -> None:
             fetch_fabdem()
         elif grp == "press":
             fetch_press()
+        elif grp == "era5":
+            fetch_era5()
         elif grp == "s1":
             fetch_s1(plan_only)
         else:

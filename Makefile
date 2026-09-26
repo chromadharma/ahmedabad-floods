@@ -5,9 +5,9 @@ ifeq ($(OS),Windows_NT)
 PY = .venv/Scripts/python
 endif
 
-.PHONY: all env data test
+.PHONY: all env data test rain_check
 
-all: data test
+all: data test rain_check
 
 env:
 	uv venv --python 3.12 .venv && uv pip install --python $(PY) -r requirements.txt
@@ -17,3 +17,6 @@ data:
 
 test:
 	$(PY) -m pytest -q tests
+
+rain_check:
+	$(PY) scripts/rain_check.py

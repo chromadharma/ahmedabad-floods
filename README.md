@@ -13,7 +13,9 @@ reuses the `hazardnet` engine from
 [ca-road-fragility](https://github.com/chromadharma/ca-road-fragility).
 
 **Status (27 Sep 2026):** design agreed ([`docs/DESIGN.md`](docs/DESIGN.md));
-E1 data fetched. No models run yet.
+E1 data fetched; AMC rain and Vasna figures transcribed (`data/manual/`).
+One finding already: it was still raining when the 25 July image was taken
+(DESIGN §4). No models run yet.
 
 ## Run
 
