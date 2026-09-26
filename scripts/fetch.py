@@ -8,6 +8,8 @@ Every source, URL and licence is listed in data/README.md.
     python scripts/fetch.py s1           # Sentinel-1 track-B scenes, city window only (needs `make env`)
     python scripts/fetch.py s1 --plan    # list the scenes and estimate the bytes; download nothing
     python scripts/fetch.py era5         # ERA5 hourly rain, 9 grid cells over the domain (Open-Meteo)
+    python scripts/fetch.py places       # OSM Nominatim points for the localities the reports name
+    python scripts/fetch.py waterways    # OSM waterway lines over the domain (Overpass)
     python scripts/fetch.py all
 
 Every group except s1 is standard library only, so it runs before the
@@ -180,6 +182,80 @@ def fetch_press() -> None:
         except urllib.error.URLError as e:     # one dead page shouldn't stop the rest
             print(f"  FAIL press/{fname}: {e}")
     (RAW / "press" / "SOURCES.json").write_text(json.dumps(PRESS, indent=2))
+
+
+# -------------------------------------------------------------------- places
+
+# Localities named in the E1 reports (press/), for map labels and first-look
+# checks. Nominatim usage policy: identify, <= 1 request/s, cache results.
+PLACES = ("Bopal", "Ghuma", "Shela", "Vejalpur", "Sarkhej", "Makarba", "Jodhpur",
+          "Bodakdev", "Thaltej", "Gota", "Vasna", "Paldi", "Maninagar", "Naroda",
+          "Kalupur", "Asarwa")
+
+
+def fetch_places() -> None:
+    import time
+    import urllib.parse
+    dest = RAW / "places" / "nominatim_places.json"
+    if dest.exists():
+        print(f"  have {dest.relative_to(RAW)}")
+        return
+    W, S, E, N = DOMAIN_BBOX
+    out = {}
+    for name in PLACES:
+        q = urllib.parse.urlencode({"q": f"{name}, Ahmedabad", "format": "jsonv2", "limit": 1,
+                                    "viewbox": f"{W},{N},{E},{S}", "bounded": 1})
+        with urllib.request.urlopen(urllib.request.Request(
+                "https://nominatim.openstreetmap.org/search?" + q, headers=UA), timeout=60) as r:
+            hits = json.load(r)
+        out[name] = hits[0] if hits else None
+        print(f"  {name}: " + (f"{float(hits[0]['lat']):.4f}, {float(hits[0]['lon']):.4f} "
+                               f"({hits[0].get('addresstype')})" if hits else "NOT FOUND"))
+        time.sleep(1.1)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(out, indent=1))
+
+
+# ---------------------------------------------------------------- waterways
+
+# OSM waterway lines, to check the HAND drainage threshold against and to seed
+# the Sabarmati, whose catchment lies mostly outside the domain (DESIGN §5.2).
+# Direct Overpass call with the project UA and no osmnx Referer, a retry cap,
+# and rotation across backends (the traps recorded for Project 1).
+OVERPASS = ("https://gall.openstreetmap.de/api", "https://lambert.openstreetmap.de/api",
+            "https://overpass-api.de/api")
+
+
+def fetch_waterways() -> None:
+    import time
+    import urllib.parse
+    dest = RAW / "osm" / "waterways.json"
+    if dest.exists():
+        print(f"  have {dest.relative_to(RAW)}")
+        return
+    W, S, E, N = DOMAIN_BBOX
+    query = (f'[out:json][timeout:180];way["waterway"~"^(river|stream|canal|drain|ditch)$"]'
+             f"({S},{W},{N},{E});out tags geom;")
+    body = urllib.parse.urlencode({"data": query}).encode()
+    last = None
+    for base in OVERPASS:
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(urllib.request.Request(
+                        base + "/interpreter", data=body, headers=UA), timeout=240) as r:
+                    data = json.load(r)
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(json.dumps(data))
+                kinds = {}
+                for el in data["elements"]:
+                    k = el["tags"].get("waterway"); kinds[k] = kinds.get(k, 0) + 1
+                print(f"  got  {dest.relative_to(RAW)} from {base}: {kinds}")
+                return
+            except (urllib.error.URLError, TimeoutError) as e:
+                last = e
+                print(f"    {base} attempt {attempt + 1}: {e}")
+                time.sleep(15)
+    raise RuntimeError(f"all Overpass backends failed: {last}")
 
 
 # ---------------------------------------------------------------------- ERA5
@@ -365,7 +441,7 @@ def fetch_s1(plan_only: bool = False) -> None:
 
 # ---------------------------------------------------------------------- main
 
-GROUPS = ("dem", "fabdem", "wards", "press", "era5", "s1")
+GROUPS = ("dem", "fabdem", "wards", "press", "places", "waterways", "era5", "s1")
 
 
 def main(which: str, plan_only: bool = False) -> None:
@@ -378,6 +454,10 @@ def main(which: str, plan_only: bool = False) -> None:
             fetch_fabdem()
         elif grp == "press":
             fetch_press()
+        elif grp == "waterways":
+            fetch_waterways()
+        elif grp == "places":
+            fetch_places()
         elif grp == "era5":
             fetch_era5()
         elif grp == "s1":

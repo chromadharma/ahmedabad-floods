@@ -13,3 +13,8 @@ pandas==3.0.6
 PyYAML==6.0.3
 requests==2.34.2
 pytest==9.1.1
+# Terrain (M1 HAND, M2 depressions) and figures
+pysheds==0.5
+numba==0.67.0
+scipy==1.18.1
+matplotlib==3.11.2

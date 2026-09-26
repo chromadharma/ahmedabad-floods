@@ -156,7 +156,7 @@ ERA5 cell, about 3 mm/h in the last hour. AMC's gauges agree on the day: city
 average 62.8 mm in the 24 h to 06:00 on (most likely) 25 July, heaviest in the
 Central and East zones. So the image is not "two days after the rain". It
 shows standing water from 23 July plus fresh water from 24–25 July, taken in
-light rain. Three consequences, for you to rule on before §5.3 is built:
+light rain. Three consequences, all accepted (D11):
 (a) M3 must be forced through 25 Jul 01:09 UTC, not just 23 July, and the gauge
 record has a 12-hour hole on the night of 23 July; (b) rain on open water
 roughens it and can raise C-band backscatter, so SAR may *under*-detect water
@@ -464,6 +464,7 @@ overridden.
 | D7 | Validation events | **The July 2026 floods (E1)** only (§4) |
 | D8 | Hospitals and population | *Default:* OSM hospitals, with the gap to an official list noted as a limitation; a population layer (WorldPop or GHS-POP) chosen at fetch time after its licence is checked |
 | D9 | Definitions and the "better" bar | You left these to me: cut-off at ≥ 30 cm, 30 min delay threshold, both readings of "depth", and a skill margin of +0.10 (§5.4–5.5). Each is explained in plain terms where it's defined |
+| D11 | Rain at the 25 July pass (§4, found 27 Sep) | **Decided 27 Sep 2026, all three yes:** (a) M3 is forced through 25 Jul 01:09 UTC, not just 23 July; (b) the write-up states that rain-roughened water can make SAR under-detect flooding in the E1 image; (c) M1 and M2 are expected to over-predict less for timing than §5.3 assumed, since the image is nearer peak depth |
 | D10 | Literature check | *Default:* a short search before the models are built; the result goes in `FINDINGS.md`, including if something close exists |
 
 ## 10. References
