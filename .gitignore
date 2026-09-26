@@ -1,0 +1,20 @@
+# secrets
+.env
+
+# environments
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# data: never commit raw or interim data (see data/README.md)
+data/raw/
+data/interim/
+logs/
+
+# large outputs are regenerated; figures and tables are kept
+outputs/cache/
+
+# working files
+scratch/
+*.part
