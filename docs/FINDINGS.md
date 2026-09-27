@@ -4,6 +4,47 @@ Running record, newest first. Each finding names the script and table it
 comes from. Nothing here is scored against the Sentinel-1 image yet; these are
 first looks, and they are written so they can be proved wrong.
 
+## 4. The radar's new open water lies in farmland; the flooded belt is hidden from it (27 Sep 2026)
+
+`studies/ahmedabad/sar.py`; exhibit `exhibits/out/EX-1.png`; tables
+`outputs/tables/sar_e1_summary.json`, `outputs/tables/sar_e1_places.csv`.
+
+The 25 July track-B image, set against the mean of 1 and 13 July (VV, gamma0,
+10 m), shows **5,638 ha of new open water**: 11.8% of the ground the radar can
+judge. **98.5% of it is cropland.** Thresholds: a fall of 4.8 dB or more and
+25 July VV at or below −12.8 dB, both from Otsu over the 67 most-darkened
+640 m tiles. Half of that water (49.9%) was still dark on 6 August.
+
+Around the worst-hit localities, almost none of the judgeable ground turned to
+open water (within 1.5 km: Bopal 1.5%, Ghuma 0.3%, Shela 2.8%, Sarkhej 3.7%).
+The radar can judge only 23–60% of the ground there; the rest is built-up,
+which is excluded. The open ground that is judgeable got *wetter* (median
++1.5 to +2.2 dB), not flooded.
+
+Built-up ground in the worst-hit belt brightened more than further north
+(median +2.1 to +2.6 dB at Bopal, Ghuma, Shela, Sarkhej and Makarba, against
++1.6 to +1.7 dB at Thaltej, Bodakdev and Gota). Standing water at wall bases
+(double bounce) would do this, but so could differences in building type.
+This stays experimental.
+
+**Consequence for validation (DESIGN §5.4, D9).** Scored on the observable
+mask as designed, the E1 test would be decided almost entirely on farmland.
+The two competing explanations there are rain ponding and paddy flooded for
+transplanting, and neither is the urban flooding the project asks about. This
+needs a decision before any model is scored; the options are in the session
+notes and will go into DESIGN §9.
+
+**Method notes.**
+- GLO-30 heights were converted from the EGM2008 geoid to ellipsoidal
+  (−54.0 to −55.5 m here) before terrain correction, since sarsen reads DEM
+  heights as ellipsoidal.
+- sarsen writes south-up rasters. The first detection run reprojected
+  WorldCover onto that grid and misaligned it (6,604 ha instead of 5,944).
+  Everything is now flipped to north-up on read.
+- Trees are excluded from the observable mask, in addition to DESIGN §5.3's
+  three exclusions (C-band sees little water under canopy), and so are pixels
+  with no WorldCover class.
+
 ## 3. The flooded west doesn't stand out in the terrain (27 Sep 2026)
 
 `studies/ahmedabad/terrain.py`, figure `outputs/figures/t2_terrain_west.png`.

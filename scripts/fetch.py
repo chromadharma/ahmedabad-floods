@@ -10,6 +10,7 @@ Every source, URL and licence is listed in data/README.md.
     python scripts/fetch.py era5         # ERA5 hourly rain, 9 grid cells over the domain (Open-Meteo)
     python scripts/fetch.py places       # OSM Nominatim points for the localities the reports name
     python scripts/fetch.py waterways    # OSM waterway lines over the domain (Overpass)
+    python scripts/fetch.py worldcover   # ESA WorldCover 2021 window over the domain (needs `make env`)
     python scripts/fetch.py all
 
 Every group except s1 is standard library only, so it runs before the
@@ -258,6 +259,34 @@ def fetch_waterways() -> None:
     raise RuntimeError(f"all Overpass backends failed: {last}")
 
 
+# ---------------------------------------------------------------- WorldCover
+
+# ESA WorldCover 2021 v200, 10 m land cover (CC BY 4.0). Its built-up class
+# marks where C-band SAR can't reliably see water (DESIGN §5.3 observable mask).
+# The tile is a COG; only the domain window is read (needs `make env`).
+WORLDCOVER = ("https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/"
+              "ESA_WorldCover_10m_2021_v200_N21E072_Map.tif")
+
+
+def fetch_worldcover() -> None:
+    dest = RAW / "worldcover" / "worldcover_2021_v200_domain.tif"
+    if dest.exists():
+        print(f"  have {dest.relative_to(RAW)}")
+        return
+    os.environ.setdefault("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+    import rasterio
+    from rasterio.windows import from_bounds
+    with rasterio.open(f"/vsicurl/{WORLDCOVER}") as src:
+        win = from_bounds(*DOMAIN_BBOX, transform=src.transform).round_offsets().round_lengths()
+        data = src.read(1, window=win)
+        prof = src.profile | dict(width=win.width, height=win.height,
+                                  transform=src.window_transform(win), compress="deflate")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with rasterio.open(dest, "w", **prof) as dst:
+        dst.write(data, 1)
+    print(f"  got  {dest.relative_to(RAW)} ({win.width} x {win.height})")
+
+
 # ---------------------------------------------------------------------- ERA5
 
 # ERA5 hourly precipitation via Open-Meteo's archive API (no key). Only used to
@@ -441,7 +470,7 @@ def fetch_s1(plan_only: bool = False) -> None:
 
 # ---------------------------------------------------------------------- main
 
-GROUPS = ("dem", "fabdem", "wards", "press", "places", "waterways", "era5", "s1")
+GROUPS = ("dem", "fabdem", "wards", "press", "places", "waterways", "era5", "s1", "worldcover")
 
 
 def main(which: str, plan_only: bool = False) -> None:
@@ -458,6 +487,8 @@ def main(which: str, plan_only: bool = False) -> None:
             fetch_waterways()
         elif grp == "places":
             fetch_places()
+        elif grp == "worldcover":
+            fetch_worldcover()
         elif grp == "era5":
             fetch_era5()
         elif grp == "s1":

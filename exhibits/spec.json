@@ -1,0 +1,155 @@
+{
+ "case": "Ahmedabad floods E1, 23-25 Jul 2026",
+ "author": "Sahasrik Ragani",
+ "crs": "EPSG:32643",
+ "dpi": 200,
+ "project": "e1_exhibits.qgz",
+ "out_dir": "out",
+ "annotations": "annotations.geojson",
+ "annotations_gpkg": "annotations.gpkg",
+ "credits": [
+  "Contains modified Copernicus Sentinel data 2026",
+  "ESA WorldCover 2021 (CC BY 4.0)",
+  "Copernicus GLO-30 DEM",
+  "(c) OpenStreetMap contributors (ODbL)"
+ ],
+ "layers": {
+  "vv_pre": {
+   "type": "raster",
+   "style": "sar_db",
+   "path": "data/vv_20260713_db.tif",
+   "meta": {
+    "sensor": "Sentinel-1D C-SAR IW GRDH",
+    "product": "VV gamma0 dB",
+    "acq_utc": "2026-07-13 01:09Z",
+    "gsd_m": 10,
+    "scene": "S1D_IW_GRDH_1SDV_20260713T010924_20260713T010949_003648_006824_7405",
+    "processing": "sarsen 0.9.6 terrain correction to gamma0 on GLO-30 (geoid-corrected to ellipsoid), 10 m UTM 43N; Lee 5x5 filter"
+   }
+  },
+  "vv_during": {
+   "type": "raster",
+   "style": "sar_db",
+   "path": "data/vv_20260725_db.tif",
+   "meta": {
+    "sensor": "Sentinel-1D C-SAR IW GRDH",
+    "product": "VV gamma0 dB",
+    "acq_utc": "2026-07-25 01:09Z",
+    "gsd_m": 10,
+    "scene": "S1D_IW_GRDH_1SDV_20260725T010925_20260725T010950_003823_006E26_FBB7",
+    "processing": "sarsen 0.9.6 terrain correction to gamma0 on GLO-30 (geoid-corrected to ellipsoid), 10 m UTM 43N; Lee 5x5 filter"
+   }
+  },
+  "vv_change": {
+   "type": "raster",
+   "style": "change_db",
+   "threshold_db": 4.8,
+   "path": "data/vv_change_db.tif",
+   "meta": {
+    "sensor": "Sentinel-1D C-SAR IW GRDH",
+    "product": "VV change vs mean of 1 and 13 Jul, dB",
+    "acq_utc": "2026-07-25 01:09Z vs 2026-07-01 and 2026-07-13 01:09Z",
+    "gsd_m": 10,
+    "scene": "S1D_IW_GRDH_1SDV_20260725T010925_20260725T010950_003823_006E26_FBB7",
+    "processing": "sarsen 0.9.6 terrain correction to gamma0 on GLO-30 (geoid-corrected to ellipsoid), 10 m UTM 43N; Lee 5x5 filter"
+   }
+  },
+  "classes": {
+   "type": "raster",
+   "style": "change_db",
+   "threshold_db": 1,
+   "path": "data/e1_classes_display.tif",
+   "meta": {
+    "sensor": "Sentinel-1D C-SAR IW GRDH",
+    "product": "classified: new open water / built-up brightening",
+    "acq_utc": "2026-07-25 01:09Z",
+    "gsd_m": 10,
+    "scene": "S1D_IW_GRDH_1SDV_20260725T010925_20260725T010950_003823_006E26_FBB7",
+    "processing": "sarsen 0.9.6 terrain correction to gamma0 on GLO-30 (geoid-corrected to ellipsoid), 10 m UTM 43N; Lee 5x5 filter; classes from studies/ahmedabad/sar.py"
+   }
+  },
+  "world": {
+   "type": "vector",
+   "style": "world",
+   "path": "C:/Program Files/QGIS 4.0.2/apps/qgis/resources/data/world_map.gpkg|layername=countries"
+  }
+ },
+ "exhibits": [
+  {
+   "id": "EX-1",
+   "layout": "2x2",
+   "title": "On 25 July the radar's new open water lay in farmland; the flooded built-up belt was hidden from it",
+   "subtitle": "Western Ahmedabad (Bopal, Ghuma, Shela, Sarkhej). Radar VV before and during the flood, same orbit and geometry; change; and the classified result.",
+   "panels": [
+    {
+     "extent": [
+      72.4,
+      22.962,
+      72.56,
+      23.058
+     ],
+     "layers": [
+      "vv_pre"
+     ],
+     "meta_from": "vv_pre",
+     "caption": "Radar VV, 13 Jul (before)"
+    },
+    {
+     "extent": [
+      72.4,
+      22.962,
+      72.56,
+      23.058
+     ],
+     "layers": [
+      "vv_during"
+     ],
+     "meta_from": "vv_during",
+     "caption": "Radar VV, 25 Jul 06:39 IST, in light rain"
+    },
+    {
+     "extent": [
+      72.4,
+      22.962,
+      72.56,
+      23.058
+     ],
+     "layers": [
+      "vv_change",
+      "vv_during"
+     ],
+     "meta_from": "vv_change",
+     "caption": "VV change from the 1 and 13 Jul mean, beyond 4.8 dB"
+    },
+    {
+     "extent": [
+      72.4,
+      22.962,
+      72.56,
+      23.058
+     ],
+     "layers": [
+      "classes",
+      "vv_during"
+     ],
+     "meta_from": "classes",
+     "caption": "Classified: new open water; built-up that brightened 3 dB or more"
+    }
+   ],
+   "locator": {
+    "layers": [
+     "world"
+    ],
+    "extent": [
+     70.5,
+     21.5,
+     74.5,
+     24.5
+    ],
+    "caption": "Gujarat, India; box = panel A"
+   },
+   "data_key": "C: VV fell (dark blue) or rose (green) by 4.8 dB or more; Otsu threshold over the 67 most-darkened 640 m tiles. D, dark blue: new open water (also 25 Jul VV at most -12.8 dB; built-up, trees, permanent water excluded). D, green: built-up that brightened 3 dB or more (chosen; experimental).",
+   "cannot_show": "Water between buildings: built-up land (WorldCover 2021) is excluded, so Bopal's streets are not scored. Rain at the pass roughens water and can hide it. Flood water in farmland and paddy flooded for transplanting look alike; 50% was still dark on 6 Aug. The swath misses the river and the east. 10 m pixels miss underpasses."
+  }
+ ]
+}

@@ -18,3 +18,10 @@ pysheds==0.5
 numba==0.67.0
 scipy==1.18.1
 matplotlib==3.11.2
+# Sentinel-1 calibration and terrain correction (DESIGN §5.3)
+sarsen==0.9.6
+xarray-sentinel==0.9.6
+xarray==2026.7.0
+rioxarray==0.23.0
+dask==2026.8.0
+scikit-image==0.26.0

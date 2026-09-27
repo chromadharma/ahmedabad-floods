@@ -5,9 +5,9 @@ ifeq ($(OS),Windows_NT)
 PY = .venv/Scripts/python
 endif
 
-.PHONY: all env data test rain_check terrain figures
+.PHONY: all env data test rain_check terrain figures sar exhibits
 
-all: data test rain_check terrain figures
+all: data test rain_check terrain figures sar exhibits
 
 env:
 	uv venv --python 3.12 .venv && uv pip install --python $(PY) -r requirements.txt
@@ -26,3 +26,11 @@ terrain:
 
 figures:
 	$(PY) -m studies.ahmedabad.figures_terrain all
+
+sar:
+	$(PY) -m studies.ahmedabad.sar all
+
+# needs QGIS installed; render.py lives in the imagery-exhibits skill
+exhibits:
+	$(PY) exhibits/make_e1_exhibits.py
+	python "$(IMAGERY_EXHIBITS)/scripts/render.py" exhibits/spec.json

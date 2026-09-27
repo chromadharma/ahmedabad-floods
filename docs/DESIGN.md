@@ -265,8 +265,12 @@ tags these underpasses is unverified.
   during the second day's rain (§4, 27 Sep check)*. M3 is scored
   at the matching model hour; M1 and M2 give maximum extents only and will
   over-predict for that reason. The README says so beside the numbers.
+- *As built (27 Sep 2026, FINDINGS §4):* sarsen (Apache-2.0) gamma0 at 10 m
+  on geoid-corrected GLO-30; Lee 5×5; reference = mean of 1 and 13 July;
+  split-based Otsu for both thresholds; trees also excluded from the
+  observable mask.
 - **Processing without SNAP.** Calibration and terrain correction use
-  `sarsen` (pure Python; licence to confirm), reading only the city window from the AWS
+  `sarsen` (pure Python; Apache-2.0), reading only the city window from the AWS
   TIFFs where possible. If that proves unreliable, we fall back to Planetary
   Computer RTC tiles or Earth Engine (D4).
 
@@ -465,6 +469,7 @@ overridden.
 | D8 | Hospitals and population | *Default:* OSM hospitals, with the gap to an official list noted as a limitation; a population layer (WorldPop or GHS-POP) chosen at fetch time after its licence is checked |
 | D9 | Definitions and the "better" bar | You left these to me: cut-off at ≥ 30 cm, 30 min delay threshold, both readings of "depth", and a skill margin of +0.10 (§5.4–5.5). Each is explained in plain terms where it's defined |
 | D11 | Rain at the 25 July pass (§4, found 27 Sep) | **Decided 27 Sep 2026, all three yes:** (a) M3 is forced through 25 Jul 01:09 UTC, not just 23 July; (b) the write-up states that rain-roughened water can make SAR under-detect flooding in the E1 image; (c) M1 and M2 are expected to over-predict less for timing than §5.3 assumed, since the image is nearer peak depth |
+| D12 | Drain loss in M2/M3 (FINDINGS §3) | **Decided 27 Sep 2026: two parameters, not one.** Separate drain-loss rates for areas served and not served by AMC storm drains (Bopal–Ghuma, per AMC, never got a full network). The served/unserved boundary still needs a source; it is fixed before calibration, never tuned on E1 |
 | D10 | Literature check | *Default:* a short search before the models are built; the result goes in `FINDINGS.md`, including if something close exists |
 
 ## 10. References
