@@ -139,18 +139,20 @@ def annotations() -> dict:
                                       label="Claimed: Bopal-Ghuma-Shela worst hit, water about 3 ft deep for about 3 days",
                                       source="DeshGujarat 25 Jul 2026 (AMC); Counterview 5 Aug 2026 (opinion column)",
                                       geom_precision="hull of OSM locality points, buffered 700 m; the claim names places, not an outline")))
-    # INFERRED: built-up brightening, worst-hit vs less-affected localities
+    # INFERRED: built-up brightening runs west-to-east and does not track the
+    # reported flooding (Jodhpur and Vejalpur, worst hit in the press, brightened least)
     rows = {r["place"]: r for r in csv.DictReader(open(ROOT / "outputs" / "tables" / "sar_e1_places.csv"))}
-    hit = [float(rows[k]["builtup_median_change_db"]) for k in ("Bopal", "Ghuma", "Shela", "Sarkhej", "Makarba")]
-    ref = [float(rows[k]["builtup_median_change_db"]) for k in ("Thaltej", "Bodakdev", "Gota")]
-    bx, by = to_utm.transform(float(places["Bopal"]["lon"]), float(places["Bopal"]["lat"]))
-    lon, lat = to_geo.transform(bx + 900, by - 400)
+    west = [float(rows[k]["builtup_median_change_db"]) for k in ("Bopal", "Ghuma", "Shela", "Sarkhej", "Makarba")]
+    east = [float(rows[k]["builtup_median_change_db"]) for k in ("Jodhpur", "Vejalpur", "Thaltej", "Bodakdev")]
+    jx, jy = to_utm.transform(float(places["Jodhpur"]["lon"]), float(places["Jodhpur"]["lat"]))
+    lon, lat = to_geo.transform(jx - 600, jy + 300)
     feats.append(dict(type="Feature", geometry=dict(type="Point", coordinates=[lon, lat]),
                       properties=dict(ann_id="e1-04", exhibit="EX-1", panel="D", **{"class": "INFERRED"},
-                                      label=(f"Built-up ground here brightened {min(hit) - max(ref):.1f}-{max(hit) - min(ref):.1f} dB more "
-                                             "than at Thaltej, Bodakdev and Gota"),
-                                      evidence=("median built-up change within 1.5 km (sar_e1_places.csv). Water at wall "
-                                                "bases (double bounce) or building type; experimental."))))
+                                      label=(f"Built-up brightening falls west to east ({min(west):+.1f} to {max(west):+.1f} dB, "
+                                             f"then {min(east):+.1f} to {max(east):+.1f} dB) even where the east flooded: "
+                                             "not a flood signal on its own"),
+                                      evidence=("median built-up change within 1.5 km (sar_e1_places.csv); Jodhpur and "
+                                                "Vejalpur are worst hit in the press yet brightened least."))))
     return dict(type="FeatureCollection", features=feats)
 
 
@@ -186,10 +188,9 @@ def spec(paths: dict) -> dict:
                  caption="Classified: new open water; built-up that brightened 3 dB or more"),
         ],
         locator=dict(layers=["world"], extent=[70.5, 21.5, 74.5, 24.5], caption="Gujarat, India; box = panel A"),
-        data_key=(f"C: VV fell (dark blue) or rose (green) by {T_CHANGE:.1f} dB or more; Otsu threshold over "
-                  f"the {SUMMARY['tiles']} most-darkened 640 m tiles. D, dark blue: new open water (also 25 Jul VV "
-                  f"at most -{abs(SUMMARY['t_water_db']):.1f} dB; built-up, trees, permanent water excluded). "
-                  "D, green: built-up that brightened 3 dB or more (chosen; experimental)."),
+        data_key=(f"C: VV fell (dark blue) or rose (green) by {T_CHANGE:.1f} dB or more (Otsu). D, dark blue: "
+                  f"new open water (also 25 Jul VV at most -{abs(SUMMARY['t_water_db']):.1f} dB; built-up, trees, "
+                  "permanent water excluded). D, green: built-up that brightened 3 dB or more (chosen; see INF 4)."),
         cannot_show=("Water between buildings: built-up land (WorldCover 2021) is excluded, so Bopal's streets are "
                      "not scored. Rain at the pass roughens water and can hide it. Flood water in farmland and "
                      "paddy flooded for transplanting look alike; 50% was still dark on 6 Aug. The swath misses "

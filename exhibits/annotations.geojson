@@ -460,8 +460,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     72.46761862887894,
-     23.03511121270079
+     72.51453213388848,
+     23.01954247212199
     ]
    },
    "properties": {
@@ -469,8 +469,8 @@
     "exhibit": "EX-1",
     "panel": "D",
     "class": "INFERRED",
-    "label": "Built-up ground here brightened 0.4-1.0 dB more than at Thaltej, Bodakdev and Gota",
-    "evidence": "median built-up change within 1.5 km (sar_e1_places.csv). Water at wall bases (double bounce) or building type; experimental."
+    "label": "Built-up brightening falls west to east (+2.1 to +2.6 dB, then +1.6 to +1.8 dB) even where the east flooded: not a flood signal on its own",
+    "evidence": "median built-up change within 1.5 km (sar_e1_places.csv); Jodhpur and Vejalpur are worst hit in the press yet brightened least."
    }
   }
  ]

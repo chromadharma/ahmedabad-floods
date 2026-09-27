@@ -148,7 +148,7 @@
     ],
     "caption": "Gujarat, India; box = panel A"
    },
-   "data_key": "C: VV fell (dark blue) or rose (green) by 4.8 dB or more; Otsu threshold over the 67 most-darkened 640 m tiles. D, dark blue: new open water (also 25 Jul VV at most -12.8 dB; built-up, trees, permanent water excluded). D, green: built-up that brightened 3 dB or more (chosen; experimental).",
+   "data_key": "C: VV fell (dark blue) or rose (green) by 4.8 dB or more (Otsu). D, dark blue: new open water (also 25 Jul VV at most -12.8 dB; built-up, trees, permanent water excluded). D, green: built-up that brightened 3 dB or more (chosen; see INF 4).",
    "cannot_show": "Water between buildings: built-up land (WorldCover 2021) is excluded, so Bopal's streets are not scored. Rain at the pass roughens water and can hide it. Flood water in farmland and paddy flooded for transplanting look alike; 50% was still dark on 6 Aug. The swath misses the river and the east. 10 m pixels miss underpasses."
   }
  ]

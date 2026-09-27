@@ -37,8 +37,13 @@ POLS = ("VV", "VH")
 
 
 def scenes() -> dict[str, Path]:
-    info = json.loads((RAW / "s1" / "e1_scenes.json").read_text())
-    return {s["date"]: RAW / "s1" / f"{s['id']}.SAFE" for s in info}
+    """All fetched scenes by date: the E1 set and the 2025 same-season baseline."""
+    out = {}
+    for manifest in ("e1_scenes.json", "base2025_scenes.json"):
+        f = RAW / "s1" / manifest
+        if f.exists():
+            out |= {s["date"]: RAW / "s1" / f"{s['id']}.SAFE" for s in json.loads(f.read_text())}
+    return out
 
 
 def make_dem() -> Path:
@@ -218,6 +223,41 @@ def detect() -> dict:
     return summary
 
 
+BASE_PRE, BASE_DURING = ("2025-06-29", "2025-07-11"), "2025-07-23"
+RECURRING = 6            # 10 m class: E1 open water that the same test also flags in July 2025
+
+
+def recurring() -> dict:
+    """DESIGN D13: remove farmland that darkens every July. The E1 test, with the
+    E1 thresholds and masks unchanged, is applied to the 2025 same-season scenes
+    (same track and geometry; 23 Jul 2025 had 1.6 mm, ERA5). E1 open-water pixels
+    it also flags become RECURRING and drop out of scoring, neither hit nor miss."""
+    db = lambda a: 10 * np.log10(a)
+    summ = json.loads((ROOT / "outputs" / "tables" / "sar_e1_summary.json").read_text())
+    t_change, t_water = summ["t_change_db"], summ["t_water_db"]
+    vv = {d: lee(_read_g(d, "VV")[0]) for d in (*BASE_PRE, BASE_DURING)}
+    ref = np.nanmean(np.stack([vv[d] for d in BASE_PRE]), axis=0)
+    change25, dur25 = db(vv[BASE_DURING]) - db(ref), db(vv[BASE_DURING])
+    with rasterio.open(OUT / "e1_classes_10m.tif") as s:
+        cls, prof = s.read(1), s.profile
+    flood = cls == FLOOD
+    rec_strict = flood & (change25 <= t_change) & (dur25 <= t_water)
+    rec_loose = flood & (dur25 <= t_water)             # sensitivity: merely dark on 23 Jul 2025
+    cls = cls.copy()
+    cls[rec_strict] = RECURRING
+    with rasterio.open(OUT / "e1_classes_10m.tif", "w", **prof) as dst:
+        dst.write(cls, 1)
+    ha = lambda m: float(m.sum()) * RES * RES / 1e4
+    out = dict(e1_open_water_ha=round(ha(flood)), recurring_ha=round(ha(rec_strict)),
+               recurring_share=round(float(rec_strict.sum() / flood.sum()), 3),
+               loose_rule_dark_23jul2025_share=round(float(rec_loose.sum() / flood.sum()), 3),
+               nonrecurring_ha=round(ha(flood & ~rec_strict)))
+    summ["recurring_2025"] = out
+    (ROOT / "outputs" / "tables" / "sar_e1_summary.json").write_text(json.dumps(summ, indent=2))
+    print(json.dumps(out, indent=2))
+    return out
+
+
 def to_model_grid() -> None:
     """10 m classes -> the 30 m model grid (DESIGN §5.4): per 30 m cell, the
     observable share and the flooded share of the observable part. A cell is
@@ -290,9 +330,11 @@ if __name__ == "__main__":
         rtc(sys.argv[2], sys.argv[3])
     elif step in ("rtc", "all"):
         for d in scenes():
-            for p in POLS:
+            for p in (POLS if d.startswith("2026") else ("VV",)):   # detection uses VV only
                 rtc(d, p)
     if step in ("detect", "all"):
         detect()
+        if (RAW / "s1" / "base2025_scenes.json").exists():
+            recurring()
         to_model_grid()
         places_summary()

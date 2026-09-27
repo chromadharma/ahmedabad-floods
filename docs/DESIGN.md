@@ -274,6 +274,27 @@ tags these underpasses is unverified.
   TIFFs where possible. If that proves unreliable, we fall back to Planetary
   Computer RTC tiles or Earth Engine (D4).
 
+### 5.3b Reporting flooding in built-up areas (proposed 27 Sep 2026)
+
+The E1 radar image cannot see water between buildings (FINDINGS §4), yet the
+built-up west and north (Bopal, Thaltej, Naranpura, the areas under metro
+stations) are where the flooding was worst. So the observed-flooding product
+is an **evidence map**, not a flood/dry map. Each H3 hex shows its strongest
+evidence, and the absence of evidence is drawn as "no evidence", never as "dry":
+
+| Tier | Evidence | Status |
+|---|---|---|
+| 1 | A documented report at point or street precision in the hex (AMC lists, press), with source and time | 19 points + 3 streets geocoded (`outputs/tables/reported_locations_geocoded.csv`) |
+| 2 | A documented report naming the locality the hex lies in | 31 localities; locality extents need a polygon source (OSM `place=suburb` / neighbourhood boundaries) |
+| 3 | Radar open water on the judgeable (non-built-up) ground in the hex, net of recurring July water | done (`e1_observed_30m.tif`) |
+| 4 | InSAR coherence loss in built-up land between the pre-event pair (1–13 Jul) and the co-event pair (13–25 Jul): the established urban method (e.g. the UrbanSARFloods benchmark, TU Munich 2024, arXiv 2406.04111) | needs Sentinel-1 SLC. ASF HyP3 generates coherence on demand with a free NASA Earthdata login, which only you can create |
+| — | Radar-blind share of the hex (built-up that tiers 3–4 cannot judge) | drawn explicitly on the map |
+| — | Local accounts not yet in print (the author's: Thaltej, Naranpura, under metro stations, Bopal side) | shown as CLAIM, unscored, until a published source or dated photograph backs each one |
+
+Known bias, written up rather than corrected: AMC's lists name transport
+infrastructure (BRTS stations, underpasses) far more than homes, and 16 of the
+22 named societies can't be located from their names.
+
 ### 5.4 Validation metrics
 
 Scores are computed on the observable mask, on the 30 m grid, with SAR water
@@ -470,6 +491,7 @@ overridden.
 | D9 | Definitions and the "better" bar | You left these to me: cut-off at ≥ 30 cm, 30 min delay threshold, both readings of "depth", and a skill margin of +0.10 (§5.4–5.5). Each is explained in plain terms where it's defined |
 | D11 | Rain at the 25 July pass (§4, found 27 Sep) | **Decided 27 Sep 2026, all three yes:** (a) M3 is forced through 25 Jul 01:09 UTC, not just 23 July; (b) the write-up states that rain-roughened water can make SAR under-detect flooding in the E1 image; (c) M1 and M2 are expected to over-predict less for timing than §5.3 assumed, since the image is nearer peak depth |
 | D12 | Drain loss in M2/M3 (FINDINGS §3) | **Decided 27 Sep 2026: two parameters, not one.** Separate drain-loss rates for areas served and not served by AMC storm drains (Bopal–Ghuma, per AMC, never got a full network). The served/unserved boundary still needs a source; it is fixed before calibration, never tuned on E1 |
+| D13 | Validation redesign (FINDINGS §4), fixed 27 Sep 2026 before any model is scored | **Two-part test, replacing the single SAR score in D9.** (1) *Farmland:* the SAR contingency score as in §5.4, with pixels that also darken in the same July window of 2025 (same track, same geometry) removed as recurring paddy; D9's +0.10 skill bar applies here. (2) *Built-up:* hit rate at geocoded reported flood locations (press, AMC lists). Hits only, since reports carry no negatives. To stop a model winning by flooding everything, every rung is compared at an **equal flooded share of built-up land**, set to the share M1 floods in its matching scenario; M0 is scored the same way. *Proposed bar, to confirm:* a rung is better if its hit rate beats M1's by ≥ 0.10 at that share. (3) GRD built-up brightening is reported, not scored: it does not track the reported flooding (FINDINGS §4) |
 | D10 | Literature check | *Default:* a short search before the models are built; the result goes in `FINDINGS.md`, including if something close exists |
 
 ## 10. References

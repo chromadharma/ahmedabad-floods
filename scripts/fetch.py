@@ -10,6 +10,7 @@ Every source, URL and licence is listed in data/README.md.
     python scripts/fetch.py era5         # ERA5 hourly rain, 9 grid cells over the domain (Open-Meteo)
     python scripts/fetch.py places       # OSM Nominatim points for the localities the reports name
     python scripts/fetch.py waterways    # OSM waterway lines over the domain (Overpass)
+    python scripts/fetch.py osm_features # OSM stations, underpasses, malls, lakes, complexes (Overpass)
     python scripts/fetch.py worldcover   # ESA WorldCover 2021 window over the domain (needs `make env`)
     python scripts/fetch.py all
 
@@ -65,6 +66,15 @@ PRESS = {
         "https://deshgujarat.com/2026/07/25/ahmedabad-city-records-upto-3-7-inches-rain-in-24-hours-ward-wise-rainfall-data-here/",
     "deshgujarat_2026-07-25_societies-cleared.html":
         "https://deshgujarat.com/2026/07/25/rainwater-cleared-from-107-of-126-waterlogged-societies-in-ahmedabad-amc/",
+    # reported flood locations (DESIGN D13, built-up score)
+    "deshgujarat_2026-07-23_15-locations.html":
+        "https://deshgujarat.com/2026/07/23/waterlogging-reported-at-these-15-locations-across-ahmedabad/",
+    "deshgujarat_2026-07-23_underpasses-shut.html":
+        "https://deshgujarat.com/2026/07/23/several-underpasses-shut-in-ahmedabad/",
+    "deshgujarat_2026-07-23_43-societies.html":
+        "https://deshgujarat.com/2026/07/23/43-housing-societies-66-areas-are-waterlogged-in-ahmedabad-due-to-heavy-rain/",
+    "gujaratsamachar_2026-07-23_live-updates.html":
+        "https://english.gujaratsamachar.com/news/ahmedabad/ahmedabads-life-comes-to-a-standstill-as-torrential-rains-pound-city-sarkhej-records-highest-rainfall-81165287700",
     "counterview_2026-08_sabarmati-riverfront.html":
         "https://www.counterview.net/2026/08/did-sabarmati-riverfront-make-ahmedabad.html",
     "gujaratsamachar_amc-waterlogging-spots.html":
@@ -74,8 +84,16 @@ PRESS = {
 # E1 track B (≈01:09 UTC, descending, S1D; DESIGN §4): pre, pre, during, post.
 # Change detection pairs images from the same track only.
 S1_BUCKET = "https://sentinel-s1-l1c.s3.amazonaws.com"
-S1_DATES = ("2026-07-01", "2026-07-13", "2026-07-25", "2026-08-06")
-S1_MISSION = "S1D"
+# Scene sets, all track B (relative orbit 107). "e1" is the event; "base2025"
+# is the same season a year earlier, used to remove farmland that darkens every
+# July (paddy flooded for transplanting; DESIGN D13). 23 Jul 2025 had 1.6 mm (ERA5).
+S1_SETS = {
+    "e1": dict(dates=("2026-07-01", "2026-07-13", "2026-07-25", "2026-08-06"), mission="S1D",
+               manifest="e1_scenes.json"),
+    "base2025": dict(dates=("2025-06-29", "2025-07-11", "2025-07-23", "2025-08-04"), mission="S1A",
+                     manifest="base2025_scenes.json"),
+}
+S1_WINDOW_UTC = ("010800", "011100")   # track B; track A passes near 01:02
 S1_HOUR_UTC = "01"          # descending passes; the evening ascending pass is ~13 UTC
 S1_POLS = ("vv", "vh")
 S1_LIMIT_BYTES = 1e9        # DESIGN D4: stop and ask if the real figure passes 1 GB
@@ -227,6 +245,52 @@ OVERPASS = ("https://gall.openstreetmap.de/api", "https://lambert.openstreetmap.
             "https://overpass-api.de/api")
 
 
+def _overpass(query: str, dest: Path) -> None:
+    import time
+    import urllib.parse
+    if dest.exists():
+        print(f"  have {dest.relative_to(RAW)}")
+        return
+    body = urllib.parse.urlencode({"data": query}).encode()
+    last = None
+    for base in OVERPASS:
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(urllib.request.Request(
+                        base + "/interpreter", data=body, headers=UA), timeout=240) as r:
+                    data = json.load(r)
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(json.dumps(data))
+                print(f"  got  {dest.relative_to(RAW)} from {base}: {len(data['elements'])} elements")
+                return
+            except (urllib.error.URLError, TimeoutError) as e:
+                last = e
+                print(f"    {base} attempt {attempt + 1}: {e}")
+                time.sleep(15)
+    raise RuntimeError(f"all Overpass backends failed: {last}")
+
+
+def fetch_osm_features() -> None:
+    """Features the reported flood locations are matched to (DESIGN D13):
+    BRTS and bus stations, metro stations, below-grade roads (underpasses),
+    and named malls, lakes and residential complexes."""
+    W, S, E, N = DOMAIN_BBOX
+    bb = f"({S},{W},{N},{E})"
+    query = ("[out:json][timeout:240];("
+             f'nwr["highway"="bus_stop"]["name"]{bb};'
+             f'nwr["public_transport"~"station|platform"]["name"]{bb};'
+             f'nwr["amenity"="bus_station"]["name"]{bb};'
+             f'nwr["railway"~"station|halt"]["name"]{bb};'
+             f'way["highway"]["tunnel"]{bb};'
+             f'way["highway"]["layer"~"^-"]{bb};'
+             f'way["highway"]["name"~"[Uu]nderpass|RUB|LC"]{bb};'
+             f'nwr["shop"="mall"]["name"]{bb};'
+             f'nwr["natural"="water"]["name"]{bb};'
+             f'nwr["landuse"="residential"]["name"]{bb};'
+             ");out tags center;")
+    _overpass(query, RAW / "osm" / "features.json")
+
+
 def fetch_waterways() -> None:
     import time
     import urllib.parse
@@ -362,7 +426,7 @@ def pixel_window(transformer, bbox, shape, pad=512, block=BLOCK):
     return r0, r1, c0, c1
 
 
-def _s1_plan() -> list[dict]:
+def _s1_plan(set_name: str = "e1") -> list[dict]:
     """Scenes to fetch, each with its measurement windows and compressed byte count."""
     os.environ.setdefault("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
     os.environ.setdefault("GDAL_HTTP_MULTIRANGE", "YES")
@@ -370,18 +434,21 @@ def _s1_plan() -> list[dict]:
     from rasterio.transform import GCPTransformer
 
     plan = []
-    for date in S1_DATES:
+    cfg = S1_SETS[set_name]
+    for date in cfg["dates"]:
         y, m, d = date.split("-")
         stamp = f"{y}{m}{d}T{S1_HOUR_UTC}"
-        prefix = f"GRD/{y}/{int(m)}/{int(d)}/IW/DV/{S1_MISSION}_IW_GRDH_1SDV_{stamp}"
+        prefix = f"GRD/{y}/{int(m)}/{int(d)}/IW/DV/{cfg['mission']}_IW_GRDH_1SDV_{stamp}"
         infos = []
         for p in _s3_prefixes(prefix):
+            if not S1_WINDOW_UTC[0] <= p.split("_")[4][9:15] <= S1_WINDOW_UTC[1]:
+                continue
             with urllib.request.urlopen(urllib.request.Request(
                     f"{S1_BUCKET}/{p}productInfo.json", headers=UA), timeout=60) as r:
                 infos.append(json.load(r))
         hits = select_scenes(infos)
         if not hits:
-            raise RuntimeError(f"{date}: no {S1_MISSION} slice at {S1_HOUR_UTC}h UTC covers the domain")
+            raise RuntimeError(f"{date}: no {cfg['mission']} track-B slice covers the domain")
         if len({i["missionDataTakeId"] for i in hits}) > 1:
             raise RuntimeError(f"{date}: slices from more than one datatake; check the track")
         for info in hits:
@@ -431,8 +498,8 @@ def _write_window(url: str, dest: Path, win) -> None:
     tmp.replace(dest)
 
 
-def fetch_s1(plan_only: bool = False) -> None:
-    plan = _s1_plan()
+def fetch_s1(plan_only: bool = False, set_name: str = "e1") -> None:
+    plan = _s1_plan(set_name)
     total = sum(m["bytes"] for s in plan for m in s["measurement"].values())
     for s in plan:
         for pol, m in s["measurement"].items():
@@ -464,13 +531,13 @@ def fetch_s1(plan_only: bool = False) -> None:
             {"date": s["date"], "bbox": DOMAIN_BBOX,
              "measurement": {p: {"window_rows_cols": m["window"], "bytes_read": m["bytes"]}
                              for p, m in s["measurement"].items()}}, indent=2))
-    (RAW / "s1" / "e1_scenes.json").write_text(json.dumps(
+    (RAW / "s1" / S1_SETS[set_name]["manifest"]).write_text(json.dumps(
         [{k: s[k] for k in ("date", "id", "footprint")} for s in plan], indent=2))
 
 
 # ---------------------------------------------------------------------- main
 
-GROUPS = ("dem", "fabdem", "wards", "press", "places", "waterways", "era5", "s1", "worldcover")
+GROUPS = ("dem", "fabdem", "wards", "press", "places", "waterways", "osm_features", "era5", "s1", "worldcover")
 
 
 def main(which: str, plan_only: bool = False) -> None:
@@ -483,6 +550,8 @@ def main(which: str, plan_only: bool = False) -> None:
             fetch_fabdem()
         elif grp == "press":
             fetch_press()
+        elif grp == "osm_features":
+            fetch_osm_features()
         elif grp == "waterways":
             fetch_waterways()
         elif grp == "places":
@@ -492,7 +561,9 @@ def main(which: str, plan_only: bool = False) -> None:
         elif grp == "era5":
             fetch_era5()
         elif grp == "s1":
-            fetch_s1(plan_only)
+            fetch_s1(plan_only, "e1")
+        elif grp == "s1_base2025":
+            fetch_s1(plan_only, "base2025")
         else:
             raise SystemExit(f"unknown group {grp!r}; one of {', '.join(GROUPS)}, all")
 

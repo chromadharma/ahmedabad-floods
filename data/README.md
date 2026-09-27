@@ -15,6 +15,8 @@ hospitals are pulled at run time by `hazardnet` and cached, as in Project 1.
 | `s1/e1_scenes.json` | Scene IDs, dates and footprints actually used | written by `fetch.py` | — |
 | `era5/era5_hourly_precip_2026-06-25_2026-08-07.json` | ERA5 hourly precipitation, 3 × 3 native 0.25° cells over the domain | Open-Meteo archive API, `models=era5` (no key) | ERA5: Copernicus Climate Change Service; Open-Meteo data CC BY 4.0 |
 | `worldcover/worldcover_2021_v200_domain.tif` | ESA WorldCover 2021 v200, 10 m land cover, domain window (built-up, trees and permanent water for the SAR observable mask) | AWS `esa-worldcover` COG, windowed read | CC BY 4.0 |
+| `osm/features.json` | OSM bus/BRTS stations, rail and metro stations, below-grade roads, malls, named lakes and residential areas | Overpass | ODbL 1.0 |
+| `s1/<scene>.SAFE/` (2025) | Sentinel-1A, same track B, 29 Jun, 11 Jul, 23 Jul, 4 Aug 2025: the same-season baseline (DESIGN D13) | as for E1; `fetch.py s1_base2025` | as for E1 |
 | `osm/waterways.json` | OSM `waterway` = river, stream, canal, drain, ditch lines over the domain | Overpass (gall.openstreetmap.de, project UA, no osmnx Referer) | ODbL 1.0 |
 | `places/nominatim_places.json` | Points for 16 localities named in the E1 reports (map labels, first-look checks) | OSM Nominatim, bounded to the domain, 1 request/s | ODbL 1.0 |
 | `press/*.html`, `press/SOURCES.json` | Snapshots of the pages the E1 rain-gauge and Vasna figures are transcribed from (DESIGN §1, §3) | Publishers' sites | Publishers' copyright. Kept locally as the audit trail for transcribed numbers; never committed or republished |
@@ -69,6 +71,7 @@ and all 51 rain values were checked against the saved page text by script.
   Source inconsistencies are kept and noted per row. For example, the 23 Jul
   article's text gives Sarkhej 9.17 in and its table gives 11.12 in; the table
   value is kept.
+- `reported_locations_2026-07.csv`: 70 places reported flooded on 23-25 Jul (AMC lists via DeshGujarat, Gujarat Samachar), each with source, time, precision (point / street / locality) and the locality its source names. `reported_locations_review.csv` records the analyst's accept / degrade / reject decision on each flagged geocode, with a reason. Geocoded by `studies/ahmedabad/reports.py`.
 - `vasna_barrage_2026-07.csv`: 11 gates open by 16:00 and 20 by ~18:00 on
   23 Jul, with ~3,600 cusecs outflow (DeshGujarat). The 134–135 ft level comes
   from **one unnamed former official in an opinion column** (Counterview,

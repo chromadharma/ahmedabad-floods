@@ -21,11 +21,36 @@ The radar can judge only 23–60% of the ground there; the rest is built-up,
 which is excluded. The open ground that is judgeable got *wetter* (median
 +1.5 to +2.2 dB), not flooded.
 
-Built-up ground in the worst-hit belt brightened more than further north
-(median +2.1 to +2.6 dB at Bopal, Ghuma, Shela, Sarkhej and Makarba, against
-+1.6 to +1.7 dB at Thaltej, Bodakdev and Gota). Standing water at wall bases
-(double bounce) would do this, but so could differences in building type.
-This stays experimental.
+Built-up ground brightened everywhere (median built-up change +1.9 dB across
+the strip), more in the west (+2.1 to +2.6 dB at Bopal, Ghuma, Shela, Sarkhej
+and Makarba) than further east (+1.6 to +1.8 dB at Jodhpur, Vejalpur, Thaltej,
+Bodakdev and Gota). **That gradient does not track flooding.** Jodhpur and
+Vejalpur are among the worst hit in the press, and Thaltej flooded badly on
+local accounts, yet they brightened least. On its own, GRD brightening is not
+an urban flood indicator here. Building type and viewing geometry are the
+likelier causes.
+
+*Correction, 27 Sep 2026 (same day).* The first version of this finding, and
+mark INF 4 in EX-1, compared the west belt against Thaltej, Bodakdev and Gota
+as "less affected". Nothing supported that choice: those places were simply
+absent from the worst-hit lists. Thaltej had 7.68 in of rain on 23 July
+(top ten, DeshGujarat), and local accounts put it among the badly flooded
+areas. With Jodhpur and Vejalpur added, the comparison reverses its meaning,
+as above. EX-1 has been re-rendered with the corrected mark.
+
+**Recurring July water (DESIGN D13).** The same test, with the same
+thresholds, applied to the 2025 same-season scenes (S1A, same track; 23 Jul
+2025 had 1.6 mm) flags **15.2%** of the E1 open water (854 ha), leaving
+4,784 ha. A looser rule, "dark on 23 Jul 2025", flags **41.3%**. The strict
+rule misses paddy transplanted earlier in 2025, which stays dark in both
+reference and late image; for picking out *paddy land*, the loose rule may be
+the better test. That choice is open (see session notes); the strict rule is
+what the 30 m product currently uses.
+
+**Barrage.** At 15:00 on 23 July, the Vasna barrage stood at 124.50 ft, with
+5,578 cusecs released through 20 gates (Gujarat Samachar live blog). That is
+below the ~128 ft normal level, and it contradicts the 134–135 ft that DESIGN §1
+took from one unnamed official (Counterview), at least for that afternoon.
 
 **Consequence for validation (DESIGN §5.4, D9).** Scored on the observable
 mask as designed, the E1 test would be decided almost entirely on farmland.

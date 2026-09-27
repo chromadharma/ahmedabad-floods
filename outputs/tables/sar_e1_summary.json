@@ -14,5 +14,12 @@
     "40": 5551,
     "60": 6,
     "90": 0
+  },
+  "recurring_2025": {
+    "e1_open_water_ha": 5638,
+    "recurring_ha": 854,
+    "recurring_share": 0.152,
+    "loose_rule_dark_23jul2025_share": 0.413,
+    "nonrecurring_ha": 4784
   }
 }

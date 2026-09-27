@@ -1,0 +1,14 @@
+rid,decision,reason
+R003,accept,Manekbaug Cross Roads: the BRTS station is at this junction
+R004,accept,"Karnavati Club, Makarba: the named club; the BRTS stop is at its gate on SG Highway"
+R017,accept,Mithakhali six roads: the underpass is at this junction
+R018,accept,Jalaram Mandir by Paldi underpass: named feature of the underpass
+R028,accept,GST Crossing 1: the rail crossing the underpass replaced
+R032,accept,"Sobo Centre, South Bopal: named endpoint of the reported stretch"
+R036,accept,"Sterling City, South Bopal: the named complex"
+R008,degrade:street,matched Science City itself; the stop is on its approach road
+R019,degrade:street,match is a hospital near a Gota Road underpass; which underpass is uncertain
+R023,reject,matched Kali Cultural Garden: wrong feature type
+R034,reject,matched a Vasna park whose name contains Chhotalal: wrong feature
+R037,reject,matched Titanium City Center office block: unrelated to F.D. School
+R041,accept,OSM place 'AEC' at the AEC crossing; the bridge report names it
